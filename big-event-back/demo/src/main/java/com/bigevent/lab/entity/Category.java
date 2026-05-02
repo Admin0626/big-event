@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -18,8 +19,10 @@ public class Category {
     @TableId(type = IdType.AUTO)
     private Integer id;
 
+    @JsonProperty("categoryName")
     private String name;
 
+    @JsonProperty("categoryAlias")
     private String alias;
 
     @TableField("create_user")
