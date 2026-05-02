@@ -88,7 +88,7 @@ public class UserController {
      * 更新用户头像
      */
     @PatchMapping("/updateAvatar")
-    public Result<Void> updateAvatar(@RequestParam("avatar_url") String avatarUrl) {
+    public Result<Void> updateAvatar(@RequestParam("avatarUrl") String avatarUrl) {
         Integer userId = ThreadLocalUtil.get("userId");
         userService.updateAvatar(userId, avatarUrl);
         return Result.success();
