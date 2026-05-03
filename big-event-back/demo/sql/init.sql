@@ -9,6 +9,9 @@ CREATE DATABASE IF NOT EXISTS experiment_db DEFAULT CHARACTER SET utf8mb4 COLLAT
 
 USE experiment_db;
 
+-- 迁移: 如果数据库已存在，执行以下 SQL 更新字段类型
+-- ALTER TABLE article MODIFY COLUMN cover_img LONGTEXT COMMENT '封面图Base64数据';
+
 -- ============================================================
 -- 1. 用户表 (user)
 -- ============================================================
@@ -49,7 +52,7 @@ CREATE TABLE `article` (
     `id`          INT UNSIGNED    NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
     `title`       VARCHAR(128)    NOT NULL                 COMMENT '文章标题',
     `content`     TEXT                                     COMMENT '文章内容',
-    `cover_img`   VARCHAR(255)    DEFAULT ''               COMMENT '封面图URL',
+    `cover_img`   LONGTEXT                                 COMMENT '封面图Base64数据',
     `state`       VARCHAR(8)      DEFAULT '草稿'           COMMENT '状态: 草稿/已发布',
     `category_id` INT UNSIGNED    NOT NULL                 COMMENT '分类ID(关联category.id)',
     `create_user` INT UNSIGNED    NOT NULL                 COMMENT '创建人ID(关联user.id)',
