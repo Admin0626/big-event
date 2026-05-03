@@ -1,7 +1,7 @@
 <script setup>
-import { Edit, Delete, Plus } from '@element-plus/icons-vue'
+import { Edit, Delete, View, Plus } from '@element-plus/icons-vue'
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -15,6 +15,7 @@ import {
 } from '@/api/article.js'
 
 const route = useRoute()
+const router = useRouter()
 
 // 文章分类数据
 const categorys = ref([])
@@ -164,6 +165,10 @@ const handleDelete = async (row) => {
     }
 }
 
+const handleView = (row) => {
+    router.push({ path: '/article/detail', query: { id: row.id } })
+}
+
 // 页面初始化
 articleCategoryList()
 articleList()
@@ -231,10 +236,11 @@ onMounted(() => {
             <el-table-column label="发表时间" prop="createTime"> </el-table-column>
             <el-table-column label="状态" prop="state"></el-table-column>
             <el-table-column label="操作" width="100">
-                <template #default="{ row }">
-                <el-button :icon="Edit" circle plain type="primary" @click="handleEdit(row)"></el-button>
-                     <el-button :icon="Delete" circle plain type="danger" @click="handleDelete(row)"></el-button>
-                </template>
+<template #default="{ row }">
+    <el-button :icon="View" circle plain type="success" @click="handleView(row)"></el-button>
+    <el-button :icon="Edit" circle plain type="primary" @click="handleEdit(row)"></el-button>
+    <el-button :icon="Delete" circle plain type="danger" @click="handleDelete(row)"></el-button>
+</template>
             </el-table-column>
             <template #empty>
                 <el-empty description="没有数据" />
