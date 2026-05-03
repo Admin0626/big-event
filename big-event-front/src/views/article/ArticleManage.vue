@@ -1,137 +1,80 @@
 <script setup>
+import { Edit, Delete, Plus } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-    Edit,
-    Delete
-} from '@element-plus/icons-vue'
+    articleCategoryListService,
+    articleListService,
+    articleAddService,
+    articleUpdateService,
+    articleDeleteService
+} from '@/api/article.js'
 
-import { ref } from 'vue'
+const route = useRoute()
 
-//文章分类数据模型
-const categorys = ref([
-    {
-        "id": 3,
-        "categoryName": "美食",
-        "categoryAlias": "my",
-        "createTime": "2023-09-02 12:06:59",
-        "updateTime": "2023-09-02 12:06:59"
-    },
-    {
-        "id": 4,
-        "categoryName": "娱乐",
-        "categoryAlias": "yl",
-        "createTime": "2023-09-02 12:08:16",
-        "updateTime": "2023-09-02 12:08:16"
-    },
-    {
-        "id": 5,
-        "categoryName": "军事",
-        "categoryAlias": "js",
-        "createTime": "2023-09-02 12:08:33",
-        "updateTime": "2023-09-02 12:08:33"
-    }
-])
+// 文章分类数据
+const categorys = ref([])
 
-//用户搜索时选中的分类id
+// 搜索条件
 const categoryId = ref('')
-
-//用户搜索时选中的发布状态
 const state = ref('')
 
-//文章列表数据模型
-const articles = ref([
-    {
-        "id": 5,
-        "title": "陕西旅游攻略",
-        "content": "兵马俑,华清池,法门寺,华山...爱去哪去哪...",
-        "coverImg": "https://big-event-gwd.oss-cn-beijing.aliyuncs.com/9bf1cf5b-1420-4c1b-91ad-e0f4631cbed4.png",
-        "state": "草稿",
-        "categoryId": 2,
-        "createTime": "2023-09-03 11:55:30",
-        "updateTime": "2023-09-03 11:55:30"
-    },
-    {
-        "id": 5,
-        "title": "陕西旅游攻略",
-        "content": "兵马俑,华清池,法门寺,华山...爱去哪去哪...",
-        "coverImg": "https://big-event-gwd.oss-cn-beijing.aliyuncs.com/9bf1cf5b-1420-4c1b-91ad-e0f4631cbed4.png",
-        "state": "草稿",
-        "categoryId": 2,
-        "createTime": "2023-09-03 11:55:30",
-        "updateTime": "2023-09-03 11:55:30"
-    },
-    {
-        "id": 5,
-        "title": "陕西旅游攻略",
-        "content": "兵马俑,华清池,法门寺,华山...爱去哪去哪...",
-        "coverImg": "https://big-event-gwd.oss-cn-beijing.aliyuncs.com/9bf1cf5b-1420-4c1b-91ad-e0f4631cbed4.png",
-        "state": "草稿",
-        "categoryId": 2,
-        "createTime": "2023-09-03 11:55:30",
-        "updateTime": "2023-09-03 11:55:30"
-    },
-])
+// 文章列表
+const articles = ref([])
 
-//分页条数据模型
-const pageNum = ref(1)//当前页
-const total = ref(20)//总条数
-const pageSize = ref(3)//每页条数
+// 分页
+const pageNum = ref(1)
+const total = ref(0)
+const pageSize = ref(5)
 
-//当每页条数发生了变化，调用此函数
 const onSizeChange = (size) => {
     pageSize.value = size
     articleList()
 }
-//当前页码发生变化，调用此函数
+
 const onCurrentChange = (num) => {
     pageNum.value = num
     articleList()
 }
 
-
-//回显文章分类
-import { articleCategoryListService, articleListService,articleAddService } from '@/api/article.js'
+// 加载分类列表
 const articleCategoryList = async () => {
-    let result = await articleCategoryListService();
-
-    categorys.value = result.data;
+    let result = await articleCategoryListService()
+    categorys.value = result.data
 }
 
-//获取文章列表数据
+// 加载文章列表
 const articleList = async () => {
     let params = {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        categoryId: categoryId.value ? categoryId.value : null,
-        state: state.value ? state.value : null
+        categoryId: categoryId.value || null,
+        state: state.value || null
     }
-    let result = await articleListService(params);
+    let result = await articleListService(params)
+    total.value = result.data.total
+    articles.value = result.data.items
 
-    //渲染视图
-    total.value = result.data.total;
-    articles.value = result.data.items;
-
-    //处理数据,给数据模型扩展一个属性categoryName,分类名称
+    // 扩展分类名称
     for (let i = 0; i < articles.value.length; i++) {
-        let article = articles.value[i];
+        let article = articles.value[i]
         for (let j = 0; j < categorys.value.length; j++) {
-            if (article.categoryId == categorys.value[j].id) {
-                article.categoryName = categorys.value[j].categoryName;
+            if (article.categoryId === categorys.value[j].id) {
+                article.categoryName = categorys.value[j].categoryName
+                break
             }
         }
     }
 }
 
-
-articleCategoryList()
-articleList();
-
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
-import { Plus } from '@element-plus/icons-vue'
-//控制抽屉是否显示
+// 抽屉控制
 const visibleDrawer = ref(false)
-//添加表单数据模型
+const isEdit = ref(false)
 const articleModel = ref({
+    id: '',
     title: '',
     categoryId: '',
     coverImg: '',
@@ -139,34 +82,116 @@ const articleModel = ref({
     state: ''
 })
 
-
-//导入token
-import { useTokenStore } from '@/stores/token.js';
-const tokenStore = useTokenStore();
-
-//上传成功的回调函数
-const uploadSuccess = (result)=>{
-    articleModel.value.coverImg = result.data;
-    console.log(result.data);
+// 封面图 Base64 转换
+const handleCoverChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+        articleModel.value.coverImg = event.target.result
+    }
+    reader.readAsDataURL(file)
 }
 
-//添加文章
-import {ElMessage} from 'element-plus'
-const addArticle = async (clickState)=>{
-    //把发布状态赋值给数据模型
-    articleModel.value.state = clickState;
+// 提交文章（新增或编辑）
+const submitArticle = async (clickState) => {
+    articleModel.value.state = clickState
 
-    //调用接口
-    let result = await articleAddService(articleModel.value);
+    let result
+    if (isEdit.value) {
+        result = await articleUpdateService(articleModel.value)
+        ElMessage.success(result.msg ? result.msg : '修改成功')
+    } else {
+        result = await articleAddService(articleModel.value)
+        ElMessage.success(result.msg ? result.msg : '添加成功')
+    }
 
-    ElMessage.success(result.msg? result.msg:'添加成功');
-
-    //让抽屉消失
-    visibleDrawer.value = false;
-
-    //刷新当前列表
+    visibleDrawer.value = false
+    resetArticleModel()
     articleList()
 }
+
+// 重置表单
+const resetArticleModel = () => {
+    articleModel.value = {
+        id: '',
+        title: '',
+        categoryId: '',
+        coverImg: '',
+        content: '',
+        state: ''
+    }
+    isEdit.value = false
+}
+
+// 打开添加抽屉
+const handleAdd = () => {
+    resetArticleModel()
+    visibleDrawer.value = true
+}
+
+// 打开编辑抽屉
+const handleEdit = (row) => {
+    resetArticleModel()
+    isEdit.value = true
+    articleModel.value = {
+        id: row.id,
+        title: row.title,
+        categoryId: row.categoryId,
+        coverImg: row.coverImg,
+        content: row.content,
+        state: row.state
+    }
+    visibleDrawer.value = true
+}
+
+// 删除文章
+const handleDelete = async (row) => {
+    try {
+        await ElMessageBox.confirm('确定要删除这篇文章吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        })
+        let result = await articleDeleteService(row.id)
+        ElMessage.success(result.msg ? result.msg : '删除成功')
+        articleList()
+    } catch {
+        // 用户取消，不做处理
+    }
+}
+
+// 页面初始化
+articleCategoryList()
+articleList()
+
+// 检查路由参数是否带有 editId，自动进入编辑模式
+const loadArticleForEdit = async (articleId) => {
+    let result = await articleListService({ pageNum: 1, pageSize: 100, categoryId: null, state: null })
+    total.value = result.data.total
+    articles.value = result.data.items
+
+    for (let i = 0; i < articles.value.length; i++) {
+        let article = articles.value[i]
+        for (let j = 0; j < categorys.value.length; j++) {
+            if (article.categoryId === categorys.value[j].id) {
+                article.categoryName = categorys.value[j].categoryName
+                break
+            }
+        }
+    }
+
+    let target = articles.value.find(a => a.id == articleId)
+    if (target) {
+        handleEdit(target)
+    }
+}
+
+onMounted(() => {
+    if (route.query.editId) {
+        loadArticleForEdit(route.query.editId)
+    }
+})
 </script>
 <template>
     <el-card class="page-container">
@@ -174,7 +199,7 @@ const addArticle = async (clickState)=>{
             <div class="header">
                 <span>文章管理</span>
                 <div class="extra">
-                    <el-button type="primary" @click="visibleDrawer = true">添加文章</el-button>
+                    <el-button type="primary" @click="handleAdd">添加文章</el-button>
                 </div>
             </div>
         </template>
@@ -206,8 +231,8 @@ const addArticle = async (clickState)=>{
             <el-table-column label="状态" prop="state"></el-table-column>
             <el-table-column label="操作" width="100">
                 <template #default="{ row }">
-                    <el-button :icon="Edit" circle plain type="primary"></el-button>
-                    <el-button :icon="Delete" circle plain type="danger"></el-button>
+                <el-button :icon="Edit" circle plain type="primary" @click="handleEdit(row)"></el-button>
+                     <el-button :icon="Delete" circle plain type="danger" @click="handleDelete(row)"></el-button>
                 </template>
             </el-table-column>
             <template #empty>
@@ -220,7 +245,7 @@ const addArticle = async (clickState)=>{
             @current-change="onCurrentChange" style="margin-top: 20px; justify-content: flex-end" />
 
         <!-- 抽屉 -->
-        <el-drawer v-model="visibleDrawer" title="添加文章" direction="rtl" size="50%">
+        <el-drawer v-model="visibleDrawer" :title="isEdit ? '编辑文章' : '添加文章'" direction="rtl" size="50%">
             <!-- 添加文章表单 -->
             <el-form :model="articleModel" label-width="100px">
                 <el-form-item label="文章标题">
@@ -242,17 +267,13 @@ const addArticle = async (clickState)=>{
                         on-success:设置上传成功的回调函数
                      -->
                    
-                    <el-upload class="avatar-uploader" :auto-upload="true" :show-file-list="false"
-                    action="/api/upload"
-                    name="file"
-                    :headers="{'Authorization':tokenStore.token}"
-                    :on-success="uploadSuccess"
-                    >
-                        <img v-if="articleModel.coverImg" :src="articleModel.coverImg" class="avatar" />
-                        <el-icon v-else class="avatar-uploader-icon">
-                            <Plus />
-                        </el-icon>
-                    </el-upload>
+                <div class="avatar-uploader">
+                    <img v-if="articleModel.coverImg" :src="articleModel.coverImg" class="avatar" />
+                    <label v-else class="el-upload avatar-uploader-icon" for="cover-input">
+                        <el-icon><Plus /></el-icon>
+                    </label>
+                    <input id="cover-input" type="file" accept="image/*" style="display: none" @change="handleCoverChange" />
+                </div>
                 </el-form-item>
                 <el-form-item label="文章内容">
                     <div class="editor">
@@ -261,8 +282,8 @@ const addArticle = async (clickState)=>{
                     </div>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="addArticle('已发布')">发布</el-button>
-                    <el-button type="info" @click="addArticle('草稿')">草稿</el-button>
+                    <el-button type="primary" @click="submitArticle('已发布')">发布</el-button>
+                    <el-button type="info" @click="submitArticle('草稿')">草稿</el-button>
                 </el-form-item>
             </el-form>
         </el-drawer>
