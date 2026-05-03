@@ -33,3 +33,18 @@ export const articleAddService = (articleData)=>{
     return request.post('/article',articleData);
 
 }
+
+// 文章更新
+export const articleUpdateService = (articleData) => {
+    return request.put('/article', articleData);
+}
+
+// 文章删除
+export const articleDeleteService = (id) => {
+    return request.delete('/article?id=' + id);
+}
+
+// 文章详情
+export const articleDetailService = (id) => {
+    return request.get('/article/detail', { params: { id } });
+}
