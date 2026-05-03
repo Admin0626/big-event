@@ -76,7 +76,7 @@ const articleList = async () => {
 const visibleDrawer = ref(false)
 const isEdit = ref(false)
 const articleModel = ref({
-    id: '',
+    id: null,
     title: '',
     categoryId: '',
     coverImg: '',
@@ -118,7 +118,7 @@ const submitArticle = async (clickState) => {
 // 重置表单
 const resetArticleModel = () => {
     articleModel.value = {
-        id: '',
+        id: null,
         title: '',
         categoryId: '',
         coverImg: '',
