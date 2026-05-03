@@ -10,7 +10,8 @@ import {
     articleListService,
     articleAddService,
     articleUpdateService,
-    articleDeleteService
+    articleDeleteService,
+    articleDetailService
 } from '@/api/article.js'
 
 const route = useRoute()
@@ -97,18 +98,20 @@ const handleCoverChange = (e) => {
 const submitArticle = async (clickState) => {
     articleModel.value.state = clickState
 
-    let result
-    if (isEdit.value) {
-        result = await articleUpdateService(articleModel.value)
-        ElMessage.success(result.msg ? result.msg : '修改成功')
-    } else {
-        result = await articleAddService(articleModel.value)
-        ElMessage.success(result.msg ? result.msg : '添加成功')
+    try {
+        let result
+        if (isEdit.value) {
+            result = await articleUpdateService(articleModel.value)
+        } else {
+            result = await articleAddService(articleModel.value)
+        }
+        ElMessage.success(result.msg ? result.msg : (isEdit.value ? '修改成功' : '添加成功'))
+        visibleDrawer.value = false
+        resetArticleModel()
+        articleList()
+    } catch (error) {
+        ElMessage.error(error.response?.data?.msg || '操作失败')
     }
-
-    visibleDrawer.value = false
-    resetArticleModel()
-    articleList()
 }
 
 // 重置表单
@@ -167,23 +170,21 @@ articleList()
 
 // 检查路由参数是否带有 editId，自动进入编辑模式
 const loadArticleForEdit = async (articleId) => {
-    let result = await articleListService({ pageNum: 1, pageSize: 100, categoryId: null, state: null })
-    total.value = result.data.total
-    articles.value = result.data.items
+    try {
+        let result = await articleDetailService(articleId)
+        let target = result.data
 
-    for (let i = 0; i < articles.value.length; i++) {
-        let article = articles.value[i]
+        // 扩展分类名称
         for (let j = 0; j < categorys.value.length; j++) {
-            if (article.categoryId === categorys.value[j].id) {
-                article.categoryName = categorys.value[j].categoryName
+            if (target.categoryId === categorys.value[j].id) {
+                target.categoryName = categorys.value[j].categoryName
                 break
             }
         }
-    }
 
-    let target = articles.value.find(a => a.id == articleId)
-    if (target) {
         handleEdit(target)
+    } catch {
+        ElMessage.warning('文章不存在或无权限编辑')
     }
 }
 
@@ -258,16 +259,7 @@ onMounted(() => {
                     </el-select>
                 </el-form-item>
                 <el-form-item label="文章封面">
-
-                    <!-- 
-                        auto-upload:设置是否自动上传
-                        action:设置服务器接口路径
-                        name:设置上传的文件字段名
-                        headers:设置上传的请求头
-                        on-success:设置上传成功的回调函数
-                     -->
-                   
-                <div class="avatar-uploader">
+                    <div class="avatar-uploader">
                     <img v-if="articleModel.coverImg" :src="articleModel.coverImg" class="avatar" />
                     <label v-else class="el-upload avatar-uploader-icon" for="cover-input">
                         <el-icon><Plus /></el-icon>

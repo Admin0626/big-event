@@ -9,8 +9,9 @@ import { articleCategoryListService } from '@/api/article.js'
 const route = useRoute()
 const router = useRouter()
 
-const article = ref({})
+const article = ref(null)
 const categoryName = ref('')
+const loading = ref(false)
 
 const loadArticle = async () => {
     const id = route.query.id
@@ -20,14 +21,15 @@ const loadArticle = async () => {
         return
     }
 
+    loading.value = true
     try {
         let result = await articleDetailService(id)
         article.value = result.data
 
-        // 加载分类名称
+        // 加载分类名称（使用宽松比较处理类型差异）
         let catResult = await articleCategoryListService()
         for (let cat of catResult.data) {
-            if (cat.id === article.value.categoryId) {
+            if (cat.id == article.value.categoryId) {
                 categoryName.value = cat.categoryName
                 break
             }
@@ -35,6 +37,8 @@ const loadArticle = async () => {
     } catch (error) {
         ElMessage.warning('文章不存在或无权限查看')
         router.push('/article/manage')
+    } finally {
+        loading.value = false
     }
 }
 
@@ -67,7 +71,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <el-card class="page-container">
+    <el-card class="page-container" v-loading="loading">
         <template #header>
             <div class="header">
                 <el-button type="primary" :icon="ArrowLeft" plain @click="goBack">返回</el-button>
@@ -78,7 +82,7 @@ onMounted(() => {
             </div>
         </template>
 
-        <div class="article-detail">
+        <div class="article-detail" v-if="article">
             <h1 class="title">{{ article.title }}</h1>
 
             <div class="meta">
